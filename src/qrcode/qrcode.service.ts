@@ -66,12 +66,12 @@ export class QrcodeService {
         });
     }
 
+    async deleteById(id: string): Promise<Qrcode> {
+        return await this.QRModel.findByIdAndDelete(id);
+    }
+    
     createLink(req: any, qrcode: any): string{
         const id = qrcode._id;
         return `${req.protocol}://${req.get('Host')}/${id}`
-    }
-    
-    async deleteById(id: string): Promise<Qrcode> {
-        return await this.QRModel.findByIdAndDelete(id);
     }
 }
