@@ -72,6 +72,6 @@ export class QrcodeService {
     
     createLink(req: any, qrcode: any): string{
         const id = qrcode._id;
-        return `${req.protocol}://${req.get('Host')}/${id}`
+        return `${req.protocol}://${req.get('Host')}/qrcode/${id}`
     }
 }
