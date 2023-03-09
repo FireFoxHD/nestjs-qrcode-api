@@ -1,5 +1,6 @@
-import { Body, Controller, Get, Param, Post } from '@nestjs/common';
+import { Body, Controller, Get, Param, Post, Req } from '@nestjs/common';
 import { EncryptionService } from 'src/encryption/encryption.service';
+import {Request} from 'express'
 import { QrcodeDto } from './dto/create-qrcode.dto';
 import { QrcodeService } from './qrcode.service';
 import { Qrcode } from './schemas/qrcode.schema';
@@ -10,10 +11,6 @@ export class QrcodeController {
         private qrCodeService: QrcodeService,
     ) {}
 
-    @Get()
-    hello(): string {
-      return "hello"
-    }
 
     @Post('encrypt')
     async encryptQrcodes(@Body() qrcodeDto: QrcodeDto): Promise<Qrcode> {
@@ -31,13 +28,13 @@ export class QrcodeController {
     }
 
     @Get('/:id/:pin') //possible ../qrcode/12314&1111
-    async getQrcode(@Param() params): Promise<Qrcode> {
-      return this.qrCodeService.findById(params.id, params.pin);
+    async getQrcode( @Req() req: Request, @Param() params: {id: string, pin: string}): Promise<Qrcode> {
+      return this.qrCodeService.findById(req, params);
     }
 
     @Post('create')
-    async createQrcode(@Body() qrcodeDto: QrcodeDto): Promise<Qrcode> {
-      return this.qrCodeService.create(qrcodeDto);
+    async createQrcode(@Body() qrcodeDto: QrcodeDto,@Req() req: Request ): Promise<Qrcode> {
+      return this.qrCodeService.create(req, qrcodeDto);
     }
 
     

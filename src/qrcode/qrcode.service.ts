@@ -2,7 +2,9 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import mongoose from 'mongoose';
 import { EncryptionService } from 'src/encryption/encryption.service';
+import { QrcodeDto } from './dto/create-qrcode.dto';
 import { Qrcode } from './schemas/qrcode.schema';
+import {Request} from 'express'
 
 
 
@@ -38,17 +40,22 @@ export class QrcodeService {
         return qrcodes;
     }
 
-    async create(qrcode: Qrcode): Promise<Qrcode> {
-        const res = await this.QRModel.create(qrcode);
+    async create(req: Request, qrcodeDto: QrcodeDto): Promise<Qrcode> {
+        // console.log(this.encrypt(qrcode));
+        const res = await this.QRModel.create(await this.encrypt(qrcodeDto));
+        const link = this.createLink(req, res);
+        res.link = link
         return res;
     }
 
-    async findById(id: string, pin: string): Promise<Qrcode> {
-        const qrcode = await this.QRModel.findById(id);
+    async findById(req: Request, params: {id: string, pin: string}): Promise<Qrcode> {
+        const qrcode = await this.QRModel.findById(params.id);
         if (!qrcode) throw new NotFoundException('Qrcode not found.');
+        const link = this.createLink(req, qrcode);
+        qrcode.link = link
         if(!qrcode.isProtected) return qrcode;
         const decryptedCode = await this.decrypt(qrcode);
-        if(decryptedCode.data.pin == pin) return decryptedCode;
+        if(decryptedCode.data.pin == params.pin) return decryptedCode;
         throw new DOMException('Incorrect Pin.');
     }
     
@@ -57,6 +64,11 @@ export class QrcodeService {
           new: true,
           runValidators: true,
         });
+    }
+
+    createLink(req: any, qrcode: any): string{
+        const id = qrcode._id;
+        return `${req.protocol}://${req.get('Host')}/${id}`
     }
     
     async deleteById(id: string): Promise<Qrcode> {
