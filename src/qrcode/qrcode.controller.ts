@@ -1,7 +1,6 @@
-import { Body, Controller, Get, Param, Post, Req } from '@nestjs/common';
-import { EncryptionService } from 'src/encryption/encryption.service';
-import {Request} from 'express'
-import { QrcodeDto } from './dto/create-qrcode.dto';
+import { Body, Controller, Delete, Get, Param, Post, Req } from '@nestjs/common';
+import { Request } from 'express'
+import { CreateQrcodeDto } from './dto/CreateQrcode.dto';
 import { QrcodeService } from './qrcode.service';
 import { Qrcode } from './schemas/qrcode.schema';
 
@@ -11,31 +10,26 @@ export class QrcodeController {
         private qrCodeService: QrcodeService,
     ) {}
 
-
-    @Post('encrypt')
-    async encryptQrcodes(@Body() qrcodeDto: QrcodeDto): Promise<Qrcode> {
-      return this.qrCodeService.encrypt(qrcodeDto);
-    }
-
-    @Post('decrypt')
-    async decryptQrcodes(@Body() qrcodeDto: QrcodeDto): Promise<Qrcode> {
-      return this.qrCodeService.decrypt(qrcodeDto);
-    }
-
     @Get()
     async getAllQrcode(): Promise<Qrcode[]> {
       return this.qrCodeService.findAll();
     }
 
-    @Get('/:id/:pin') //possible ../qrcode/12314&1111
-    async getQrcode( @Req() req: Request, @Param() params: {id: string, pin: string}): Promise<Qrcode> {
-      return this.qrCodeService.findById(req, params);
+    @Get('/:id') 
+    async getQrcode( @Req() req: Request, @Param('id') id: string): Promise<Qrcode> {
+      if(!req.body.hasOwnProperty('pin')) req.body.pin = "";
+      return this.qrCodeService.findById(id, req.body.pin);
     }
 
     @Post('create')
-    async createQrcode(@Body() qrcodeDto: QrcodeDto,@Req() req: Request ): Promise<Qrcode> {
-      return this.qrCodeService.create(req, qrcodeDto);
+    async createQrcode(@Body() qrcodeDto: CreateQrcodeDto,@Req() req: Request ): Promise<Qrcode> {
+      let linkpartial = `${req.protocol}://${req.get('Host')}/qrcode/`
+      return this.qrCodeService.create(linkpartial, qrcodeDto);
     }
 
-    
+    //check if user is authorized
+    @Delete()
+    async deleteQrcode(@Req() req: Request ): Promise<Qrcode> {
+      return this.qrCodeService.deleteById(req.body.id);
+    }
 }

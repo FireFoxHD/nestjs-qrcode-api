@@ -1,6 +1,7 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
-//import { Bank } from '../interfaces/bank.interface';
+import { Document } from "mongoose";
 
+export type QRDocument = Qrcode & Document;
 
 @Schema({ timestamps: true })
 export class Qrcode {
