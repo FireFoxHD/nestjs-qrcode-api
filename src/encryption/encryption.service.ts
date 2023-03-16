@@ -3,6 +3,7 @@ import { Injectable } from '@nestjs/common';
 import { Qrcode } from 'src/qrcode/schemas/qrcode.schema';
 import { CreateQrcodeDto } from 'src/qrcode/dto/CreateQrcode.dto';
 import { DecryptQrcodeDto } from 'src/qrcode/dto/DecryptQrcode.dto';
+import { QrData } from 'src/qrcode/interfaces/qrdata.interface';
 // import { Qrcode } from 'src/qrcode/schemas/qrcode.schema';
 
 
@@ -34,21 +35,21 @@ export class EncryptionService {
         return decryptedData
     }
 
-    async encryptQRData(qrcode: CreateQrcodeDto): Promise<string> {
+    async encryptQRData(qrcode: CreateQrcodeDto): Promise<QrData> {
         let data = JSON.stringify(qrcode.data);
         const cipher = createCipheriv('aes-256-cbc', Buffer.from(this.key), this.iv);
         let encryptedData = this.iv + cipher.update(data, "utf-8", "hex");
         encryptedData += cipher.final("hex");
-        return encryptedData
+        return encryptedData as unknown as QrData
 
     }
 
-    async decryptQRData(qrcode: DecryptQrcodeDto): Promise<string> {
+    async decryptQRData(qrcode: DecryptQrcodeDto): Promise<QrData> {
         let text = qrcode.data.replaceAll("\"", ""); 
         const iv = text.slice(0, 16);
         const decipher = createDecipheriv('aes-256-cbc', Buffer.from(this.key), iv);
         let decryptedData = decipher.update(text.slice(16), "hex", "utf-8");
         decryptedData += decipher.final("utf8");
-        return decryptedData
+        return decryptedData as unknown as QrData
     }
 }

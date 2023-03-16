@@ -4,6 +4,7 @@ import mongoose from 'mongoose';
 import { EncryptionService } from 'src/encryption/encryption.service';
 import { CreateQrcodeDto } from './dto/CreateQrcode.dto';
 import { DecryptQrcodeDto } from './dto/DecryptQrcode.dto';
+import { QrData } from './interfaces/qrdata.interface';
 import { Qrcode, QRDocument } from './schemas/qrcode.schema';
 
 @Injectable()
@@ -14,12 +15,13 @@ export class QrcodeService {
         private EncryptionService : EncryptionService
         ) {}
 
-    async encryptQRData(qrcode: CreateQrcodeDto): Promise<string> {
+    async encryptQRData(qrcode: CreateQrcodeDto): Promise<QrData> {
         return await this.EncryptionService.encryptQRData(qrcode);
     }
 
-    async decryptQRData(qrcode: DecryptQrcodeDto): Promise<string> {
-        return await this.EncryptionService.decryptQRData(qrcode);
+    //one day we shall learn how to remove this any and not break our code...not today tho
+    async decryptQRData(qrcode: DecryptQrcodeDto): Promise<QrData> {
+        return JSON.parse(await this.EncryptionService.decryptQRData(qrcode) as unknown as string);
     }
     
     async findAll(): Promise<Qrcode[]> {
@@ -40,7 +42,7 @@ export class QrcodeService {
         const qrcode = await this.QRModel.findById(id);
         if (!qrcode) return;
         if(qrcode.isProtected && !pin) return;
-        qrcode.data = JSON.parse(await this.decryptQRData(qrcode));
+        qrcode.data = await this.decryptQRData(qrcode);
 
         //TODO: validate pin {between 4 and 10 characters}
 
